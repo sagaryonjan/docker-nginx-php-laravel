@@ -1,0 +1,55 @@
+version: '3'
+services:
+    web:
+        build:
+            context: ./build
+            dockerfile: "Dockerfile-web"
+        volumes:
+            - ./:/var/www
+
+    #######################################
+    # MySQL server
+    #######################################
+    mysql:
+        image: mysql:5.7
+        volumes:
+            - ./build/db/mysql/:/var/lib/mysql
+        environment:
+            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_USER=root
+            - MYSQL_PASSWORD=root
+            - MYSQL_DATABASE=database
+        ports:
+            - "3306:3306"
+    nginx:
+        build:
+            context: ./build
+            dockerfile: "Dockerfile-nginx"
+        volumes:
+            - ./build/nginx/sites-enabled:/etc/nginx/sites-enabled
+            - ./:/var/www
+        ports:
+            - "80:80"
+        depends_on:
+            - web
+    #######################################
+    # PHP MY ADMIN
+    #######################################
+    admin:
+        image: phpmyadmin/phpmyadmin
+        ports:
+            - "8080:80"
+        links:
+            - mysql
+        environment:
+          PMA_HOST: mysql
+          PMA_PORT: 3306
+    worker:
+        build:
+            context: ./build
+            dockerfile: "Dockerfile-supervisor"
+        volumes:
+            - ./:/var/www
+            - ./build/supervisor/conf.d:/etc/conf.d/
+        links:
+            - web

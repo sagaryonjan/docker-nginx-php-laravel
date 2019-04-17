@@ -1,0 +1,19 @@
+FROM php:fpm-alpine
+
+RUN apk update && \
+    apk add --no-cache git zip libzip-dev zlib-dev libxml2-dev php7-simplexml php7-bcmath libpng libpng-dev php7-gd && \
+    apk add --no-cache supervisor && \
+    docker-php-ext-install pdo_mysql zip soap gd bcmath && \
+    apk del libpng-dev
+
+RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');" && \
+    php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
+    mkdir -p /etc/conf.d
+
+COPY supervisord.conf /etc/supervisord.conf
+
+CMD ["/usr/bin/supervisord", "-n", "-c",  "/etc/supervisord.conf"]
+
+EXPOSE 9001
+
+WORKDIR /etc/conf.d

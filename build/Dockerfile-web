@@ -1,0 +1,14 @@
+FROM php:fpm-alpine
+
+RUN apk update && \
+    apk add --no-cache git zip libzip-dev zlib-dev libxml2-dev php7-simplexml php7-bcmath libpng libpng-dev php7-gd && \
+    docker-php-ext-install pdo_mysql zip soap gd bcmath && \
+    apk del libpng-dev
+
+RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');" && \
+    php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+
+CMD ["php-fpm"]
+
+WORKDIR /var/www
+
